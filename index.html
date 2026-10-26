@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas de Lotes - Condominio Campestre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Azure Maps Web SDK CSS -->
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css" />
+    <style>
+        #mapaGeneral { height: 480px; width: 100%; border-radius: 1rem; z-index: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen">
+
+    <!-- Navegación -->
+    <nav class="bg-emerald-950 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">🌳 Ventas de Lotes</h1>
+            <div class="space-x-4 text-sm font-medium flex items-center">
+                <a href="index.html" class="text-emerald-200 font-bold transition">Inicio</a>
+                <a href="#nosotros" class="hover:text-emerald-200 transition">Nosotros</a>
+                <a href="#disenos" class="hover:text-emerald-200 transition">Diseños y Renta</a>
+                <a href="catalog.html" class="hover:text-emerald-200 transition">Catálogo y Búsqueda</a>
+                <a href="admin.html" class="bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded-lg transition text-xs font-bold">Acceso / Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Encabezado / Hero Section -->
+    <header class="bg-emerald-900 text-white py-16 px-4 text-center">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-4xl font-extrabold mb-3">Encuentra el Lote Perfecto para Tu Proyecto</h2>
+            <p class="text-emerald-100 text-sm md:text-base max-w-2xl mx-auto mb-6">
+                Explora el mapa interactivo de Azure Maps con terrenos disponibles en el Condominio Campestre. Consulta precios, superficie y opciones de construcción o renta.
+            </p>
+            <a href="catalog.html" class="bg-amber-500 hover:bg-amber-600 text-emerald-950 font-bold px-6 py-3 rounded-xl shadow-lg transition inline-block text-sm">
+                Ver Catálogo Completo →
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-12 flex-grow w-full space-y-16">
+
+        <!-- MAPA GENERAL INTERACTIVO AZURE MAPS -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">🗺️ Mapa General del Desarrollo (Azure Maps)</h3>
+                    <p class="text-xs text-gray-500 mt-1">Haz clic en los marcadores de Azure Maps para ver la información detallada del lote.</p>
+                </div>
+                <!-- Leyenda de colores -->
+                <div class="flex items-center gap-4 text-xs font-semibold">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Disponible</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> En Apartado</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Vendido / En Renta</span>
+                </div>
+            </div>
+
+            <div id="mapaGeneral"></div>
+        </section>
+
+        <!-- SECCIÓN 1: SOBRE NUESTRA EMPRESA -->
+        <section id="nosotros" class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div class="max-w-3xl mx-auto text-center mb-10">
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">Nuestra Empresa</span>
+                <h3 class="text-3xl font-extrabold text-gray-900 mt-2">Condominio Campestre & Ventas de Lotes</h3>
+                <p class="text-gray-600 text-sm mt-3 leading-relaxed">
+                    Somos una empresa dedicada al desarrollo inmobiliario campestre. Ofrecemos terrenos residenciales de alta plusvalía integrados con la naturaleza, con modelos de vivienda personalizados, gestión directa de contratos y programas opcionales de administración de renta.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 bg-emerald-50/50 rounded-xl border border-emerald-100 text-center">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="font-bold text-emerald-950 mb-1">Misión</h4>
+                    <p class="text-xs text-gray-600">Facilitar el acceso a terrenos de alta calidad a través de una plataforma transparente, rápida y sin intermediarios innecesarios.</p>
+                </div>
+                <div class="p-6 bg-emerald-50/50 rounded-xl border border-emerald-100 text-center">
+                    <div class="text-3xl mb-2">👁️</div>
+                    <h4 class="font-bold text-emerald-950 mb-1">Visión</h4>
+                    <p class="text-xs text-gray-600">Ser el desarrollo campestre referente en innovación tecnológica, diseño sustentable y facilidad en procesos de adquisición.</p>
+                </div>
+                <div class="p-6 bg-emerald-50/50 rounded-xl border border-emerald-100 text-center">
+                    <div class="text-3xl mb-2">🤝</div>
+                    <h4 class="font-bold text-emerald-950 mb-1">Valores</h4>
+                    <p class="text-xs text-gray-600">Transparencia, certeza jurídica, sustentabilidad ambiental y atención personalizada para cada cliente.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: DISEÑOS DE CASAS, PROTOTIPOS Y OPCIONES DE RENTA -->
+        <section id="disenos" class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div class="text-center mb-10">
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">Arquitectura y Negocio</span>
+                <h3 class="text-3xl font-extrabold text-gray-900 mt-2">Diseños de Casas y Opciones de Renta</h3>
+                <p class="text-gray-600 text-sm mt-2">Elige entre adquirir solo terreno o integrar la construcción de tu casa con modelos adaptados y programas de renta.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-emerald-950 text-base mb-2">🏡 Casa Normal (2 Recámaras)</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed">Diseño compacto y eficiente ideal para parejas o pequeñas familias. Espacios abiertos con excelente iluminación natural y acabados rústicos modernos.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-emerald-950 text-base mb-2">🏡 Casa Mediana (3 Recámaras)</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed">Perfecta para familias en crecimiento. Cuenta con sala, comedor amplios, cocina integral y áreas verdes integradas al diseño arquitectónico.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-emerald-950 text-base mb-2">🏡 Casa Grande (4 Recámaras)</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed">Residencia de lujo con amplios espacios, múltiples baños, terraza panorámica y acabados exclusivos de alta durabilidad.</p>
+                </div>
+            </div>
+
+            <!-- Banner Informativo de Programa de Renta -->
+            <div class="bg-emerald-900 text-white p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h4 class="font-bold text-lg mb-1">💼 Programa Opcional de Renta Vacacional o Residencial</h4>
+                    <p class="text-xs text-emerald-100 max-w-2xl leading-relaxed">
+                        Al adquirir tu terreno con construcción de casa, puedes optar por ingresarla a nuestro programa de renta administrada. Nosotros nos encargamos de la gestión, mantenimiento y rentabilidad mensual para maximizar tu inversión.
+                    </p>
+                </div>
+                <a href="catalog.html" class="bg-amber-500 hover:bg-amber-600 text-emerald-950 font-bold px-5 py-2.5 rounded-lg text-xs whitespace-nowrap shadow transition">
+                    Explorar Lotes y Renders →
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Pie de página completo (Footer) -->
+    <footer class="bg-emerald-950 text-emerald-200 py-10 border-t border-emerald-900 text-xs">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- Columna 1: Ubicación y Contacto -->
+            <div class="space-y-2">
+                <h4 class="font-bold text-sm text-white uppercase tracking-wider mb-3">📍 Ubicación y Contacto</h4>
+                <p><strong>Lugar:</strong> Ecatepec de Morelos, Estado de México</p>
+                <p><strong>Dirección:</strong> Av. Instituto Tecnológico s/n, Lomas de San Juan Ihuatepec</p>
+                <p><strong>Correo:</strong> <a href="mailto:contacto@ventasdelotes.com" class="hover:underline text-emerald-400">contacto@ventasdelotes.com</a></p>
+                <p><strong>Teléfono / WhatsApp:</strong> +52 (55) 5836-9100 / +52 (55) 1234-5678</p>
+            </div>
+
+            <!-- Columna 2: Encargados del Proyecto -->
+            <div class="space-y-1">
+                <h4 class="font-bold text-sm text-white uppercase tracking-wider mb-3">👥 Encargados del Proyecto</h4>
+                <ul class="space-y-1.5 text-[11px] text-emerald-100">
+                    <li>• <strong>Líder de Proyecto:</strong> CABALLERO DE LA CRUZ BLANCA ITZEL</li>
+                    <li>• <strong>Gestor de Calidad / Riesgos:</strong> HERNANDEZ RAMIREZ LUIS MANUEL</li>
+                    <li>• <strong>Analista / Documentación:</strong> SANCHEZ BARAJAS JOANNA GUADALUPE</li>
+                    <li>• <strong>Jefa de Desarrollo:</strong> CRUZ VEGA DANIELA GUISELLE</li>
+                    <li>• <strong>Desarrollo:</strong> BUENDIA CRUZ ALEXIS OMAR</li>
+                    <li>• <strong>Desarrollo:</strong> VILLUENDAS HERNANDEZ JOSE ERNESTO</li>
+                </ul>
+            </div>
+
+            <!-- Columna 3: Horarios y Derechos -->
+            <div class="space-y-2">
+                <h4 class="font-bold text-sm text-white uppercase tracking-wider mb-3">🕒 Atención al Cliente</h4>
+                <p>Lunes a Viernes: 9:00 AM - 6:00 PM</p>
+                <p>Sábados: 9:00 AM - 2:00 PM</p>
+                <div class="pt-4 border-t border-emerald-900 text-[11px] text-emerald-400">
+                    © 2026 Ventas de Lotes - Condominio Campestre[cite: 7]
+                    <br>Tecnológico de Estudios Superiores de Ecatepec
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- Azure Maps Web SDK JS -->
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <script>
+        // ⚠️ REEMPLAZA ESTA URL CON TU URL DE SAS DEL CONTENEDOR (terminada en /ventas.json)
+        const AZURE_BLOB_URL = "https://ventaslotesstorage.blob.core.windows.net/lotes?sp=rcw&st=2026-10-26T15:18:55Z&se=2027-01-31T23:33:55Z&spr=https&sv=2026-02-06&sr=c&sig=HPxwHZayFQdqlozHvhIKjl5H1RQAkvbW4ahbkPUo5bM%3D";
+
+        // Función para obtener los lotes desde la nube (Azure Blob Storage)
+        async function obtenerLotes() {
+            try {
+                const response = await fetch(AZURE_BLOB_URL);
+                if (response.ok) {
+                    const lotes = await response.json();
+                    return lotes;
+                } else if (response.status === 404) {
+                    console.log("El archivo ventas.json no existe aún en la nube. Se crearán datos iniciales.");
+                    return generarLotesIniciales();
+                } else {
+                    console.error("Error al cargar desde Azure:", response.statusText);
+                    return [];
+                }
+            } catch (error) {
+                console.error("Error de red al conectar con Azure Blob Storage:", error);
+                return [];
+            }
+        }
+
+        // Generar lotes por defecto si la nube está vacía y guardarlos automáticamente
+        async function generarLotesIniciales() {
+            const lotesIniciales = [];
+            for (let i = 1; i <= 20; i++) {
+                lotesIniciales.push({
+                    id: `LOTE-${i < 10 ? '0' + i : i}`,
+                    ubicacion: i <= 7 ? "Zona Norte, Cerca de la entrada principal" : (i <= 14 ? "Zona Boscosa, Vista panorámica" : "Sector Sur, Cerca del área recreativa"),
+                    superficie: 200 + (i * 15),
+                    precio: 300000 + (i * 25000),
+                    estado: "Disponible",
+                    lat: 19.501 + (i * 0.001),
+                    lng: -99.101 - (i * 0.001)
+                });
+            }
+
+            // Subir los datos iniciales a Azure para que quede creado el ventas.json
+            try {
+                await fetch(AZURE_BLOB_URL, {
+                    method: "PUT",
+                    headers: {
+                        "x-ms-blob-type": "BlockBlob",
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify(lotesIniciales, null, 2)
+                });
+            } catch (e) {
+                console.error("No se pudieron guardar los lotes iniciales en Azure:", e);
+            }
+
+            return lotesIniciales;
+        }
+
+        // Inicialización de Azure Maps General de forma asíncrona
+        async function inicializarMapa() {
+            const lotes = await obtenerLotes();
+
+            const mapaGeneral = new atlas.Map('mapaGeneral', {
+                center: [-99.101, 19.501],
+                zoom: 14,
+                authOptions: {
+                    authType: atlas.AuthenticationType.subscriptionKey,
+                    subscriptionKey: 'DLb5cQ99W6qCrUkk69q5dANggpkGzLNl6smCrC1jHE213MCoovR2JQQJ99CJAC8vTIn3acCYAAAgAZMP4JYE' 
+                }
+            });
+
+            mapaGeneral.events.add('ready', function () {
+                const dataSource = new atlas.source.DataSource();
+                mapaGeneral.sources.add(dataSource);
+
+                lotes.forEach(lote => {
+                    let colorMarker = '#22c55e'; // Verde - Disponible
+                    if (lote.estado === 'En Proceso de Apartado') colorMarker = '#f59e0b'; // Amarillo
+                    if (lote.estado === 'Vendido' || lote.estado === 'En Renta') colorMarker = '#2563eb'; // Azul
+
+                    const punto = new atlas.data.Feature(new atlas.data.Point([lote.lng || -99.101, lote.lat || 19.501]), {
+                        id: lote.id,
+                        estado: lote.estado,
+                        precio: lote.precio,
+                        color: colorMarker
+                    });
+                    dataSource.add(punto);
+                });
+
+                const bubbleLayer = new atlas.layer.BubbleLayer(dataSource, null, {
+                    color: ['get', 'color'],
+                    radius: 10
+                });
+                mapaGeneral.layers.add(bubbleLayer);
+
+                const popup = new atlas.Popup();
+                mapaGeneral.events.add('click', bubbleLayer, function (e) {
+                    if (e.shapes && e.shapes.length > 0) {
+                        const properties = e.shapes[0].getProperties();
+                        const coordinates = e.shapes[0].getCoordinates();
+
+                        popup.setOptions({
+                            content: `
+                                <div class="p-2 font-sans">
+                                    <b class="text-sm">${properties.id}</b><br>
+                                    <span class="text-xs">Estado: <b>${properties.estado}</b></span><br>
+                                    <span class="text-xs">Precio: <b>$${properties.precio.toLocaleString()} MXN</b></span><br>
+                                    <a href="catalog.html" class="text-[11px] text-emerald-700 font-bold underline mt-1 inline-block">Ver en catálogo →</a>
+                                </div>
+                            `,
+                            position: coordinates
+                        });
+                        popup.open(mapaGeneral);
+                    }
+                });
+            });
+        }
+
+        // Ejecutar la carga del mapa al cargar la página
+        window.onload = () => {
+            inicializarMapa();
+        };
+    </script>
+</body>
+</html>

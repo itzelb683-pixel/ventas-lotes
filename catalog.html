@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo y Búsqueda - Ventas de Lotes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Azure Maps Web SDK CSS -->
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css" />
+    <style>
+        .lote-map { height: 200px; width: 100%; border-radius: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Navegación -->
+    <nav class="bg-emerald-950 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">🌳 Ventas de Lotes</h1>
+            <div class="space-x-3 text-sm font-medium flex items-center">
+                <a href="index.html" class="hover:text-emerald-200 transition">Inicio</a>
+                <a href="catalog.html" class="text-emerald-200 font-bold transition">Catálogo y Búsqueda</a>
+                
+                <button onclick="abrirModalMisCompras()" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 text-xs px-3 py-1.5 rounded-lg font-semibold transition border border-emerald-600 flex items-center gap-1">
+                    📂 Mis Compras y Citas
+                </button>
+
+                <div id="userMenuContainer" class="flex items-center gap-2">
+                    <span id="navUserSession" class="text-xs bg-emerald-800/80 px-3 py-1.5 rounded-lg border border-emerald-600 flex items-center gap-1">
+                        👤 Invitado
+                    </span>
+                    <button id="btnLogout" onclick="cerrarSesionCliente()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold transition border border-red-500">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-10">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-900">Catálogo y Búsqueda Semántica de Terrenos</h2>
+            <p class="text-gray-600 mt-2">Base de datos centralizada con inventario en tiempo real y visualización Azure Maps.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-gray-100">
+            <div class="md:col-span-2">
+                <input type="text" id="searchInput" placeholder="Ej: terreno económico en la zona norte..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <div>
+                <select id="filterStatus" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="TODOS">Todos los estados</option>
+                    <option value="Disponible">Disponible</option>
+                    <option value="En Proceso de Apartado">En Proceso de Apartado</option>
+                    <option value="En Renta">En Renta</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="lotesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </div>
+
+    <!-- Modal: Mis Compras y Notificaciones -->
+    <div id="modalMisCompras" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-900">📂 Historial de Compras, Renta y Citas</h3>
+                <button onclick="cerrarModalMisCompras()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+            <div id="contenidoMisCompras" class="space-y-4"></div>
+            <div class="mt-6 text-right">
+                <button onclick="cerrarModalMisCompras()" class="bg-emerald-800 text-white font-bold px-5 py-2 rounded-lg text-sm hover:bg-emerald-900">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ver Fotos de Casa en Renta / Galería Ampliable -->
+    <div id="modalRenta" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-start mb-4 border-b pb-3">
+                <div>
+                    <span class="text-xs font-bold uppercase text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-full">Propiedad Disponible en Renta</span>
+                    <h3 id="modalRentaTitle" class="text-2xl font-bold text-gray-900 mt-1">Lote en Renta</h3>
+                </div>
+                <button onclick="cerrarModalRenta()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600">Haz clic en cualquier imagen para verla en tamaño grande:</p>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-700 uppercase mb-2">📸 Galería de Interiores y Fachada</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div class="rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition" onclick="ampliarImagen('img/c1.jpg', 'Fachada / Sala')"><img src="img/c1.jpg" alt="Foto 1" class="w-full h-28 object-cover"><p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">Fachada / Sala</p></div>
+                        <div class="rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition" onclick="ampliarImagen('img/c1-2.jpg', 'Cocina')"><img src="img/c1-2.jpg" alt="Foto 2" class="w-full h-28 object-cover"><p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">Cocina</p></div>
+                        <div class="rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition" onclick="ampliarImagen('img/c1-3.jpg', 'Recámara Principal')"><img src="img/c1-3.jpg" alt="Foto 3" class="w-full h-28 object-cover"><p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">Recámara Principal</p></div>
+                        <div class="rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition" onclick="ampliarImagen('img/c1-4.jpg', 'Baño')"><img src="img/c1-4.jpg" alt="Foto 4" class="w-full h-28 object-cover"><p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">Baño</p></div>
+                        <div class="rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition" onclick="ampliarImagen('img/c1-5.jpg', 'Jardín / Terraza')"><img src="img/c1-5.jpg" alt="Foto 5" class="w-full h-28 object-cover"><p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">Jardín / Terraza</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-900 block">Renta Mensual Estimada</span>
+                        <span class="text-xl font-extrabold text-indigo-800">$15,000 MXN / mes</span>
+                    </div>
+                    <button onclick="solicitarRenta()" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-5 py-2.5 rounded-lg text-sm shadow transition">
+                        Solicitar Renta de la Casa
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 text-right">
+                <button onclick="cerrarModalRenta()" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-lg text-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario de Opciones + Renders Dinámicos para Apartado -->
+    <div id="modalApartadoForm" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <span class="text-xs font-bold uppercase text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">Configuración de Compra / Apartado</span>
+                    <h3 id="modalLoteTitle" class="text-2xl font-bold text-gray-900 mt-1">Lote Seleccionado</h3>
+                </div>
+                <button onclick="cerrarModalForm()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <form id="formConfiguracionCompra" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">¿Qué deseas adquirir?</label>
+                        <select id="selectTipoAdquisicion" onchange="evaluarOpcionesCasa()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                            <option value="terreno">Solo Terreno</option>
+                            <option value="casa">Terreno + Construcción de Casa</option>
+                        </select>
+                    </div>
+
+                    <div id="boxTamanoCasa" class="hidden">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tamaño de Casa Prototipo</label>
+                        <select id="selectTamanoCasa" onchange="actualizarGaleriaRenders()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                            <option value="Normal">Casa Normal </option>
+                            <option value="Mediana">Casa Mediana </option>
+                            <option value="Grande">Casa Grande </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="boxOpcionRenta" class="hidden bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                    <label class="block text-xs font-bold text-emerald-900 uppercase mb-1">¿Deseas poner la casa en renta tras la entrega?</label>
+                    <select id="selectOpcionRenta" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none bg-white">
+                        <option value="No">No, para uso personal / habitacional</option>
+                        <option value="Sí">Sí, desea ponerla en programa de renta</option>
+                    </select>
+                </div>
+
+                <div id="sectionRenders3D" class="hidden border-t border-gray-200 pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-800 mb-2">Vista Previa 3D - <span id="tituloPrototipoCasa">Casa Normal</span> (Haz clic para ampliar)</h4>
+                    <div id="galeriaRendersDinamica" class="grid grid-cols-2 md:grid-cols-6 gap-3"></div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="cerrarModalForm()" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-lg text-sm">Cancelar</button>
+                    <button type="submit" class="bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition">Confirmar Apartado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Ampliar Imagen (Lightbox Pantalla Grande) -->
+    <div id="modalZoomImagen" class="fixed inset-0 bg-black/90 hidden flex flex-col items-center justify-center p-4 z-[100]">
+        <button onclick="cerrarZoom()" class="absolute top-5 right-5 text-white font-bold text-3xl hover:text-gray-300">&times;</button>
+        <img id="imgZoomSrc" src="" alt="Imagen Ampliada" class="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain border-2 border-white/20">
+        <p id="imgZoomCaption" class="text-white font-semibold text-sm mt-4 tracking-wide"></p>
+    </div>
+
+    <!-- Azure Maps Web SDK JS -->
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <script>
+        // ⚠️ Asegúrate de colocar tu misma URL de SAS de Azure Blob Storage terminada en /ventas.json
+        const AZURE_BLOB_URL = "https://ventaslotesstorage.blob.core.windows.net/lotes?sp=rcw&st=2026-10-26T15:18:55Z&se=2027-01-31T23:33:55Z&spr=https&sv=2026-02-06&sr=c&sig=HPxwHZayFQdqlozHvhIKjl5H1RQAkvbW4ahbkPUo5bM%3D";
+
+        let loteSeleccionadoParaApartar = null;
+        let loteSeleccionadoParaRenta = null;
+
+        // Obtener lotes desde Azure Blob Storage
+        async function obtenerLotes() {
+            try {
+                const response = await fetch(AZURE_BLOB_URL);
+                if (response.ok) {
+                    return await response.json();
+                } else if (response.status === 404) {
+                    return await generarLotesIniciales();
+                } else {
+                    return [];
+                }
+            } catch (error) {
+                console.error("Error al obtener lotes de Azure:", error);
+                return [];
+            }
+        }
+
+        // Guardar lotes en Azure Blob Storage
+        async function guardarLotes(lotes) {
+            try {
+                await fetch(AZURE_BLOB_URL, {
+                    method: "PUT",
+                    headers: {
+                        "x-ms-blob-type": "BlockBlob",
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify(lotes, null, 2)
+                });
+            } catch (error) {
+                console.error("Error al guardar lotes en Azure:", error);
+            }
+        }
+
+        async function generarLotesIniciales() {
+            const lotesIniciales = [];
+            for (let i = 1; i <= 20; i++) {
+                lotesIniciales.push({
+                    id: `LOTE-${i < 10 ? '0' + i : i}`,
+                    ubicacion: i <= 7 ? "Zona Norte, Cerca de la entrada principal" : (i <= 14 ? "Zona Boscosa, Vista panorámica" : "Sector Sur, Cerca del área recreativa"),
+                    superficie: 200 + (i * 15),
+                    precio: 300000 + (i * 25000),
+                    estado: "Disponible",
+                    lat: 19.501 + (i * 0.001),
+                    lng: -99.101 - (i * 0.001)
+                });
+            }
+            await guardarLotes(lotesIniciales);
+            return lotesIniciales;
+        }
+
+        function cargarEstadoSesion() {
+            const usuarioCliente = JSON.parse(localStorage.getItem('cliente_session'));
+            const navUser = document.getElementById('navUserSession');
+            const btnLogout = document.getElementById('btnLogout');
+
+            if (usuarioCliente && usuarioCliente.nombre) {
+                navUser.innerHTML = `👤 ${usuarioCliente.nombre}`;
+                btnLogout.classList.remove('hidden');
+            } else {
+                navUser.innerHTML = `👤 Invitado`;
+                btnLogout.classList.add('hidden');
+            }
+        }
+
+        cargarEstadoSesion();
+
+        function cerrarSesionCliente() {
+            localStorage.removeItem('cliente_session');
+            alert("Has cerrado sesión con éxito.");
+            window.location.href = "admin.html";
+        }
+
+        function ampliarImagen(src, caption) {
+            document.getElementById('imgZoomSrc').src = src;
+            document.getElementById('imgZoomCaption').innerText = caption;
+            document.getElementById('modalZoomImagen').classList.remove('hidden');
+        }
+
+        function cerrarZoom() {
+            document.getElementById('modalZoomImagen').classList.add('hidden');
+        }
+
+        function renderizarLotes(lista) {
+            const container = document.getElementById('lotesContainer');
+            container.innerHTML = "";
+
+            if (lista.length === 0) {
+                container.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">No se encontraron terrenos con esa búsqueda.</p>`;
+                return;
+            }
+
+            lista.forEach(lote => {
+                let badgeBg = "bg-green-100 text-green-800";
+                if (lote.estado === "En Proceso de Apartado") badgeBg = "bg-amber-100 text-amber-800";
+                if (lote.estado === "Vendido") badgeBg = "bg-blue-100 text-blue-800";
+                if (lote.estado === "En Renta") badgeBg = "bg-indigo-100 text-indigo-800";
+
+                const mapId = `azure-map-${lote.id.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+                let botonAccion = "";
+                if (lote.estado === "Disponible") {
+                    botonAccion = `<button onclick="intentarApartar('${lote.id}')" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-lg transition shadow text-sm">Apartar Lote</button>`;
+                } else if (lote.estado === "En Renta") {
+                    botonAccion = `<button onclick="abrirModalRenta('${lote.id}')" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-lg transition shadow text-sm flex items-center justify-center gap-1.5">🔑 En Renta - Ver Fotos</button>`;
+                } else {
+                    botonAccion = `<button disabled class="w-full bg-gray-200 text-gray-400 font-bold py-2.5 rounded-lg cursor-not-allowed text-sm">No Disponible</button>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col justify-between p-5";
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold text-xl text-emerald-950">${lote.id}</span>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${badgeBg}">${lote.estado}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 mb-1">📍 ${lote.ubicacion}</p>
+                        <p class="text-xs text-gray-600 mb-1">📐 Superficie: <strong>${lote.superficie} m²</strong></p>
+                        <p class="text-xl font-extrabold text-emerald-700 mb-4">$${lote.precio.toLocaleString()} MXN</p>
+                        <div class="mb-4">
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Azure Maps Ubicación</span>
+                            <div id="${mapId}" class="lote-map"></div>
+                        </div>
+                    </div>
+                    <div>${botonAccion}</div>
+                `;
+                container.appendChild(card);
+
+                setTimeout(() => {
+                    if (document.getElementById(mapId)) {
+                        const map = new atlas.Map(mapId, {
+                            center: [lote.lng || -99.101, lote.lat || 19.501],
+                            zoom: 15,
+                            authOptions: {
+                                authType: atlas.AuthenticationType.subscriptionKey,
+                                subscriptionKey: "DLb5cQ99W6qCrUkk69q5dANggpkGzLNl6smCrC1jHE213MCoovR2JQQJ99CJAC8vTIn3acCYAAAgAZMP4JYE"
+                            }
+                        });
+                        map.events.add('ready', function () {
+                            const dataSource = new atlas.source.DataSource();
+                            map.sources.add(dataSource);
+                            dataSource.add(new atlas.data.Feature(new atlas.data.Point([lote.lng || -99.101, lote.lat || 19.501])));
+                            map.layers.add(new atlas.layer.BubbleLayer(dataSource, null, {
+                                color: '#ea580c',
+                                radius: 8
+                            }));
+                        });
+                    }
+                }, 150);
+            });
+        }
+
+        async function aplicarBusquedaYFiltros() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            let lotes = await obtenerLotes();
+
+            let resultados = lotes.filter(lote => {
+                const matchStatus = statusFilter === "TODOS" || lote.estado === statusFilter;
+                let matchQuery = true;
+                if (query.trim() !== "") {
+                    const textoLote = `${lote.id} ${lote.ubicacion} ${lote.modeloCasa || ''}`.toLowerCase();
+                    const palabras = query.split(" ");
+                    matchQuery = palabras.some(p => textoLote.includes(p));
+                }
+                return matchStatus && matchQuery;
+            });
+            renderizarLotes(resultados);
+        }
+
+        document.getElementById('searchInput').addEventListener('input', aplicarBusquedaYFiltros);
+        document.getElementById('filterStatus').addEventListener('change', aplicarBusquedaYFiltros);
+
+        function intentarApartar(id) {
+            const clienteSesion = JSON.parse(localStorage.getItem('cliente_session'));
+            if (!clienteSesion) {
+                localStorage.setItem('lote_pendiente_apartado', id);
+                alert("Debes iniciar sesión o registrarte para apartar un terreno.");
+                window.location.href = "admin.html";
+            } else {
+                abrirModalCompra(id);
+            }
+        }
+
+        function abrirModalCompra(id) {
+            loteSeleccionadoParaApartar = id;
+            document.getElementById('modalLoteTitle').innerText = `Configuración de Compra para ${id}`;
+            document.getElementById('modalApartadoForm').classList.remove('hidden');
+            evaluarOpcionesCasa();
+        }
+
+        function cerrarModalForm() {
+            document.getElementById('modalApartadoForm').classList.add('hidden');
+        }
+
+        function abrirModalRenta(id) {
+            loteSeleccionadoParaRenta = id;
+            document.getElementById('modalRentaTitle').innerText = `Propiedad en Renta - ${id}`;
+            document.getElementById('modalRenta').classList.remove('hidden');
+        }
+
+        function cerrarModalRenta() {
+            document.getElementById('modalRenta').classList.add('hidden');
+        }
+
+        async function solicitarRenta() {
+            const clienteSesion = JSON.parse(localStorage.getItem('cliente_session'));
+            if (!clienteSesion) {
+                alert("Debes iniciar sesión o registrarte para solicitar la renta.");
+                window.location.href = "admin.html";
+                return;
+            }
+
+            let lotes = await obtenerLotes();
+            lotes = lotes.map(l => {
+                if (l.id === loteSeleccionadoParaRenta) {
+                    l.estado = "En Proceso de Apartado";
+                    l.comprador = clienteSesion.nombre.trim();
+                    l.detallesCompra = { tipo: "Renta de Casa Habitación", paraRenta: "Sí" };
+                }
+                return l;
+            });
+
+            await guardarLotes(lotes);
+            cerrarModalRenta();
+            alert(`¡Solicitud de renta enviada al administrador para ${loteSeleccionadoParaRenta}!`);
+            await aplicarBusquedaYFiltros();
+        }
+
+        function evaluarOpcionesCasa() {
+            const tipo = document.getElementById('selectTipoAdquisicion').value;
+            document.getElementById('boxTamanoCasa').classList.toggle('hidden', tipo !== 'casa');
+            document.getElementById('boxOpcionRenta').classList.toggle('hidden', tipo !== 'casa');
+            document.getElementById('sectionRenders3D').classList.toggle('hidden', tipo !== 'casa');
+            if(tipo === 'casa') {
+                actualizarGaleriaRenders();
+            }
+        }
+
+        function actualizarGaleriaRenders() {
+            const tamano = document.getElementById('selectTamanoCasa').value;
+            const container = document.getElementById('galeriaRendersDinamica');
+            const titulo = document.getElementById('tituloPrototipoCasa');
+            container.innerHTML = "";
+
+            let imagenes = [];
+            if (tamano === "Normal") {
+                titulo.innerText = "Casa Normal";
+                imagenes = [
+                    { archivo: "c1.jpeg" },
+                    { archivo: "c1-2.jpg" },
+                    { archivo: "c1-3.jpg" },
+                    { archivo: "c1-4.jpg" },
+                    { archivo: "c1-5.jpg" },
+                    { archivo: "c1-6.jpg" }
+                ];
+            } else if (tamano === "Mediana") {
+                titulo.innerText = "Casa Mediana";
+                imagenes = [
+                    { archivo: "c2.jpeg" },
+                    { archivo: "c2-2.jpeg" },
+                    { archivo: "c2-3.jpeg"},
+                    { archivo: "c2-4.jpeg" }
+                ];
+            } else if (tamano === "Grande") {
+                titulo.innerText = "Casa Grande (Residencial)";
+                imagenes = [
+                    { archivo: "c3.jpeg" },
+                    { archivo: "c3-2.jpeg"},
+                    { archivo: "c3-3.jpeg" },
+                    { archivo: "c3-4.jpeg"},
+                    { archivo: "c3-5.jpeg" },
+                    { archivo: "c3-6.jpeg" },
+                    { archivo: "c3-7.jpeg" },
+                    { archivo: "c3-8.jpeg" },
+                    { archivo: "c3-9.jpeg"}
+                ];
+            }
+
+            imagenes.forEach(img => {
+                const div = document.createElement('div');
+                div.className = "rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:opacity-90 transition";
+                div.setAttribute('onclick', `ampliarImagen('img/${img.archivo}', '${img.label}')`);
+                div.innerHTML = `
+                    <img src="img/${img.archivo}" alt="${img.label}" class="w-full h-28 object-cover">
+                    <p class="p-1 text-[10px] font-semibold text-gray-700 text-center bg-gray-50">${img.label}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('formConfiguracionCompra').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cliente = JSON.parse(localStorage.getItem('cliente_session'));
+            const tipo = document.getElementById('selectTipoAdquisicion').value;
+            const tamano = document.getElementById('selectTamanoCasa').value;
+            const renta = document.getElementById('selectOpcionRenta').value;
+
+            let lotes = await obtenerLotes();
+            lotes = lotes.map(l => {
+                if (l.id === loteSeleccionadoParaApartar) {
+                    l.estado = "En Proceso de Apartado";
+                    l.comprador = cliente ? cliente.nombre.trim() : "Cliente";
+                    l.detallesCompra = {
+                        tipo: tipo === 'casa' ? `Casa ${tamano}` : 'Solo Terreno',
+                        paraRenta: tipo === 'casa' ? renta : 'N/A'
+                    };
+                }
+                return l;
+            });
+
+            await guardarLotes(lotes);
+            cerrarModalForm();
+            alert(`¡Solicitud registrada con éxito para ${loteSeleccionadoParaApartar}!`);
+            await aplicarBusquedaYFiltros();
+        });
+
+        function abrirModalMisCompras() {
+            const cliente = JSON.parse(localStorage.getItem('cliente_session'));
+            if (!cliente) {
+                alert("Debes iniciar sesión para ver tus compras y citas.");
+                window.location.href = "admin.html";
+                return;
+            }
+
+            const contenedor = document.getElementById('contenidoMisCompras');
+            contenedor.innerHTML = "";
+
+            const notificaciones = JSON.parse(localStorage.getItem('cliente_notificaciones')) || [];
+            const misNotis = notificaciones.filter(n => n.cliente && n.cliente.trim().toLowerCase() === cliente.nombre.trim().toLowerCase());
+
+            if (misNotis.length === 0) {
+                contenedor.innerHTML = `<p class="text-center text-xs text-gray-500 py-6">Aún no tienes notificaciones de apartados, contratos o citas aprobadas.</p>`;
+            } else {
+                misNotis.forEach(n => {
+                    const esCancelado = n.tipo === "CANCELADO";
+                    const bgColor = esCancelado ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200";
+                    
+                    const div = document.createElement('div');
+                    div.className = `${bgColor} border p-4 rounded-xl space-y-2`;
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sm">Terreno: ${n.idLote}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${esCancelado ? 'bg-red-200 text-red-800' : 'bg-emerald-200 text-emerald-800'}">${n.tipo}</span>
+                        </div>
+                        <h4 class="font-bold text-gray-900 text-xs">${n.asunto}</h4>
+                        <p class="text-xs text-gray-700 whitespace-pre-line leading-relaxed">${n.mensaje}</p>
+                        ${!esCancelado ? `<button onclick="descargarPDF('${n.idLote}', '${n.asunto}')" class="mt-2 bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-emerald-900 transition">📥 Descargar Contrato y Cita en PDF</button>` : ''}
+                    `;
+                    contenedor.appendChild(div);
+                });
+            }
+
+            document.getElementById('modalMisCompras').classList.remove('hidden');
+        }
+
+        function cerrarModalMisCompras() {
+            document.getElementById('modalMisCompras').classList.add('hidden');
+        }
+
+        function descargarPDF(idLote, asunto) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("CONDOMINIO CAMPESTRE - COMPRA Y CITA", 20, 20);
+
+            doc.setFontSize(12);
+            doc.text(`Asunto: ${asunto}`, 20, 35);
+            doc.text(`Lote Asignado: ${idLote}`, 20, 45);
+            doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 20, 55);
+
+            doc.line(20, 62, 190, 62);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            const textoContrato = "Por medio del presente documento oficial, la administración del Condominio Campestre notifica la aprobación de su solicitud.\n\n" +
+                                  "Detalles de la cita:\n" +
+                                  "- Fecha: Martes 20 de Octubre de 2026\n" +
+                                  "- Hora: 11:00 AM\n" +
+                                  "- Lugar: Oficinas del Condominio Campestre.\n\n" +
+                                  "Presentar identificación oficial.";
+
+            doc.text(textoContrato, 20, 75, { maxWidth: 170 });
+            doc.save(`Contrato_${idLote}.pdf`);
+        }
+
+        // Carga inicial al abrir el catálogo
+        window.onload = async () => {
+            const lotes = await obtenerLotes();
+            renderizarLotes(lotes);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso y Administración - Ventas de Lotes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <!-- VISTA 1: INICIO DE SESIÓN / REGISTRO DE CLIENTES Y ADMIN -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="tabLogin" onclick="switchTab('login')" class="w-1/2 py-2 text-center font-bold text-emerald-800 border-b-2 border-emerald-700 text-sm">
+                    Iniciar Sesión
+                </button>
+                <button id="tabRegister" onclick="switchTab('register')" class="w-1/2 py-2 text-center font-bold text-gray-400 hover:text-gray-600 text-sm">
+                    Regístrate
+                </button>
+            </div>
+
+            <!-- Formulario de Inicio de Sesión -->
+            <div id="sectionLogin">
+                <h2 class="text-2xl font-bold text-emerald-950 mb-1">¡Bienvenido!</h2>
+                <p class="text-xs text-gray-500 mb-6">Ingresa como cliente (tu nombre) o como Administrador (Matrícula: 202110185).</p>
+
+                <form id="formLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase">Usuario o Matrícula</label>
+                        <input type="text" id="loginUser" required placeholder="Ej: Juan Pérez o 202110185" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase">Contraseña</label>
+                        <input type="password" id="loginPass" required placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-lg shadow transition text-sm">
+                        Ingresar al Sistema
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulario de Registro de Cliente -->
+            <div id="sectionRegister" class="hidden">
+                <h2 class="text-2xl font-bold text-emerald-950 mb-1">Crea tu Cuenta</h2>
+                <p class="text-xs text-gray-500 mb-6">Regístrate para apartar terrenos y recibir tus contratos.</p>
+
+                <form id="formRegister" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase">Nombre Completo</label>
+                        <input type="text" id="regName" placeholder="Juan Pérez" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase">Correo Electrónico</label>
+                        <input type="email" id="regEmail" placeholder="correo@ejemplo.com" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase">Contraseña</label>
+                        <input type="password" id="regPass" placeholder="••••••••" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-lg shadow transition text-sm">
+                        Registrarse y Continuar
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-6 text-center">
+                <a href="catalog.html" class="text-xs text-emerald-700 font-semibold hover:underline">← Ir al Catálogo de Terrenos</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA 2: PANEL DE CONTROL DE ADMINISTRADOR -->
+    <div id="adminPanel" class="hidden min-h-screen flex flex-col">
+        <nav class="bg-emerald-950 text-white shadow px-6 py-4 flex justify-between items-center">
+            <h1 class="text-base font-bold">🛠️ Panel de Control del Administrador (Matrícula: 202110185)</h1>
+            <div class="flex items-center gap-4">
+                <a href="catalog.html" class="text-xs bg-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition">Ver Catálogo</a>
+                <button onclick="cerrarSesionAdmin()" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded text-xs font-semibold transition">Cerrar Sesión</button>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-10">
+            
+            <!-- SECCIÓN A: SOLICITUDES PENDIENTES -->
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-1">📥 Solicitudes de Apartado y Compra por Autorizar</h3>
+                <p class="text-xs text-gray-500 mb-4">Revisa las solicitudes de los clientes. Al aceptar, se enviará el contrato y los datos de la cita.</p>
+                
+                <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lote</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente Comprador</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Configuración Solicitada</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solicitudesTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN B: CONTROL DE TODOS LOS TERRENOS (INVENTARIO GENERAL) -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">🗺️ Control General de Terrenos (Inventario Completo)</h3>
+                        <p class="text-xs text-gray-500">Puedes cambiar manualmente el estado de cualquier terreno (Disponible, En Proceso de Apartado, Vendido o En Renta).</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lote ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente / Asignado</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cambiar Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventarioTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ Asegúrate de colocar tu misma URL de SAS de Azure Blob Storage terminada en /ventas.json
+        const AZURE_BLOB_URL = "https://ventaslotesstorage.blob.core.windows.net/lotes?sp=rcw&st=2026-10-26T15:18:55Z&se=2027-01-31T23:33:55Z&spr=https&sv=2026-02-06&sr=c&sig=HPxwHZayFQdqlozHvhIKjl5H1RQAkvbW4ahbkPUo5bM%3D";
+
+        function switchTab(type) {
+            if (type === 'login') {
+                document.getElementById('sectionLogin').classList.remove('hidden');
+                document.getElementById('sectionRegister').classList.add('hidden');
+                document.getElementById('tabLogin').className = "w-1/2 py-2 text-center font-bold text-emerald-800 border-b-2 border-emerald-700 text-sm";
+                document.getElementById('tabRegister').className = "w-1/2 py-2 text-center font-bold text-gray-400 hover:text-gray-600 text-sm";
+            } else {
+                document.getElementById('sectionLogin').classList.add('hidden');
+                document.getElementById('sectionRegister').classList.remove('hidden');
+                document.getElementById('tabRegister').className = "w-1/2 py-2 text-center font-bold text-emerald-800 border-b-2 border-emerald-700 text-sm";
+                document.getElementById('tabLogin').className = "w-1/2 py-2 text-center font-bold text-gray-400 hover:text-gray-600 text-sm";
+            }
+        }
+
+        const loginSection = document.getElementById('loginSection');
+        const adminPanel = document.getElementById('adminPanel');
+
+        if (sessionStorage.getItem('auth_admin') === 'true') {
+            mostrarPanelAdmin();
+        }
+
+        // Manejo de inicio de sesión (Admin o Cliente)
+        document.getElementById('formLogin').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+
+            if (user === "202110185" && pass === "123456") {
+                sessionStorage.setItem('auth_admin', 'true');
+                mostrarPanelAdmin();
+            } else {
+                const cliente = { nombre: user };
+                localStorage.setItem('cliente_session', JSON.stringify(cliente));
+                alert(`¡Bienvenido, ${cliente.nombre}! Redirigiendo al catálogo.`);
+                window.location.href = "catalog.html";
+            }
+        });
+
+        // Manejo de registro de cliente
+        document.getElementById('formRegister').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nombreCliente = document.getElementById('regName').value.trim();
+            const cliente = { nombre: nombreCliente };
+            localStorage.setItem('cliente_session', JSON.stringify(cliente));
+            alert(`¡Registro exitoso! Bienvenido, ${nombreCliente}.`);
+            window.location.href = "catalog.html";
+        });
+
+        function mostrarPanelAdmin() {
+            loginSection.classList.add('hidden');
+            adminPanel.classList.remove('hidden');
+            renderizarSolicitudes();
+            renderizarInventarioCompleto();
+        }
+
+        function cerrarSesionAdmin() {
+            sessionStorage.removeItem('auth_admin');
+            location.reload();
+        }
+
+        // Obtener lotes desde Azure Blob Storage
+        async function obtenerLotes() {
+            try {
+                const response = await fetch(AZURE_BLOB_URL);
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    return [];
+                }
+            } catch (error) {
+                console.error("Error al obtener lotes de Azure:", error);
+                return [];
+            }
+        }
+
+        // Guardar lotes en Azure Blob Storage
+        async function guardarLotes(lotes) {
+            try {
+                await fetch(AZURE_BLOB_URL, {
+                    method: "PUT",
+                    headers: {
+                        "x-ms-blob-type": "BlockBlob",
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify(lotes, null, 2)
+                });
+            } catch (error) {
+                console.error("Error al guardar lotes en Azure:", error);
+            }
+        }
+
+        async function renderizarSolicitudes() {
+            const lotes = await obtenerLotes();
+            const tbody = document.getElementById('solicitudesTableBody');
+            tbody.innerHTML = "";
+            const solicitudes = lotes.filter(l => l.estado === "En Proceso de Apartado");
+
+            if (solicitudes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 text-center text-xs text-gray-400">No hay solicitudes de apartado pendientes.</td></tr>`;
+                return;
+            }
+
+            solicitudes.forEach(lote => {
+                const detalles = lote.detallesCompra || { tipo: 'Terreno', paraRenta: 'No' };
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-emerald-900 text-sm">${lote.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${lote.comprador || 'Cliente'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <span class="font-semibold text-emerald-700">${detalles.tipo}</span><br>
+                        Renta: <strong>${detalles.paraRenta}</strong>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button onclick="responderSolicitud('${lote.id}', 'aceptar')" class="bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-emerald-800 transition">Aceptar</button>
+                        <button onclick="responderSolicitud('${lote.id}', 'rechazar')" class="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-red-700 transition">Rechazar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function renderizarInventarioCompleto() {
+            const lotes = await obtenerLotes();
+            const tbody = document.getElementById('inventarioTableBody');
+            tbody.innerHTML = "";
+
+            if (lotes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-6 text-center text-xs text-gray-400">No hay terrenos registrados en la base de datos.</td></tr>`;
+                return;
+            }
+
+            lotes.forEach(lote => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-emerald-950 text-sm">${lote.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">${lote.ubicacion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-emerald-800">$${lote.precio.toLocaleString()} MXN</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-700">${lote.comprador || '—'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
+                        <select onchange="cambiarEstadoLoteDirecto('${lote.id}', this.value)" class="border border-gray-300 rounded px-2.5 py-1.5 font-semibold text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none bg-white">
+                            <option value="Disponible" ${lote.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="En Proceso de Apartado" ${lote.estado === 'En Proceso de Apartado' ? 'selected' : ''}>En Proceso de Apartado</option>
+                            <option value="Vendido" ${lote.estado === 'Vendido' ? 'selected' : ''}>Vendido</option>
+                            <option value="En Renta" ${lote.estado === 'En Renta' ? 'selected' : ''}>En Renta</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function cambiarEstadoLoteDirecto(idLote, nuevoEstado) {
+            let lotes = await obtenerLotes();
+            lotes = lotes.map(l => {
+                if (l.id === idLote) {
+                    l.estado = nuevoEstado;
+                    if (nuevoEstado === 'Disponible') {
+                        l.comprador = null;
+                        l.detallesCompra = null;
+                    }
+                }
+                return l;
+            });
+            await guardarLotes(lotes);
+            await renderizarSolicitudes();
+            await renderizarInventarioCompleto();
+            alert(`El estado del terreno ${idLote} ha sido actualizado a "${nuevoEstado}".`);
+        }
+
+        async function responderSolicitud(id, accion) {
+            let lotes = await obtenerLotes();
+            let loteActual = null;
+
+            lotes = lotes.map(l => {
+                if (l.id === id) {
+                    loteActual = l;
+                    if (accion === 'aceptar') {
+                        l.estado = (l.detallesCompra && l.detallesCompra.paraRenta === 'Sí') ? "En Renta" : "Vendido";
+                    } else {
+                        l.estado = "Disponible";
+                        l.compradorAnterior = l.comprador;
+                        l.comprador = null;
+                        l.detallesCompra = null;
+                    }
+                }
+                return l;
+            });
+            await guardarLotes(lotes);
+
+            let notificaciones = JSON.parse(localStorage.getItem('cliente_notificaciones')) || [];
+            const clienteObjetivo = loteActual.comprador || loteActual.compradorAnterior;
+
+            if (accion === 'aceptar' && loteActual) {
+                const esRenta = loteActual.detallesCompra && loteActual.detallesCompra.paraRenta === 'Sí';
+                const fechaCita = "Martes 20 de Octubre de 2026, 11:00 AM";
+                const monto = esRenta ? "Renta Mensual: $15,000 MXN" : `Costo Total: $${loteActual.precio.toLocaleString()} MXN`;
+
+                notificaciones.push({
+                    idLote: loteActual.id,
+                    cliente: clienteObjetivo,
+                    tipo: "APROBADO",
+                    fechaEmision: new Date().toLocaleDateString(),
+                    asunto: esRenta ? "Contrato de Renta Aprobado y Cita" : "Contrato de Compraventa Aprobado y Cita",
+                    mensaje: `Su solicitud para el ${loteActual.id} ha sido APROBADA.\n📅 Fecha y hora de cita para firma: ${fechaCita}.\n💰 ${monto}.`
+                });
+
+                alert(`¡Solicitud aceptada y notificación enviada a ${clienteObjetivo}!`);
+            } else if (accion === 'rechazar' && loteActual) {
+                notificaciones.push({
+                    idLote: loteActual.id,
+                    cliente: clienteObjetivo,
+                    tipo: "CANCELADO",
+                    fechaEmision: new Date().toLocaleDateString(),
+                    asunto: "Solicitud Cancelada",
+                    mensaje: `Lamentamos informarle que su solicitud de apartado para el terreno ${loteActual.id} ha sido CANCELADA por el administrador.`
+                });
+
+                alert(`Solicitud rechazada y notificación de cancelación enviada.`);
+            }
+
+            localStorage.setItem('cliente_notificaciones', JSON.stringify(notificaciones));
+            await renderizarSolicitudes();
+            await renderizarInventarioCompleto();
+        }
+    </script>
+</body>
+</html>
