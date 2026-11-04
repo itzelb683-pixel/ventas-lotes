@@ -1,0 +1,12 @@
+{
+  "name": "azure-function-lotes",
+  "version": "1.0.0",
+  "description": "API segura para base de datos de lotes",
+  "main": "index.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.17.0"
+  }
+}

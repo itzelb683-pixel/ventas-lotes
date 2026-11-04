@@ -1,0 +1,22 @@
+[
+  {
+    "id": "LOTE-01",
+    "ubicacion": "Zona Norte, Cerca de la entrada principal",
+    "superficie": 250,
+    "frente": 10,
+    "fondo": 25,
+    "precio": 350000,
+    "estado": "Disponible",
+    "coordenadas": {"lat": 19.5, "lng": -99.1}
+  },
+  {
+    "id": "LOTE-02",
+    "ubicacion": "Zona Boscosa, Vista panorámica",
+    "superficie": 300,
+    "frente": 12,
+    "fondo": 25,
+    "precio": 450000,
+    "estado": "Disponible",
+    "coordenadas": {"lat": 19.51, "lng": -99.11}
+  }
+]
